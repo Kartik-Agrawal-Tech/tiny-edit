@@ -1,0 +1,5 @@
+TW1
+R a @2/ANCHOR..@2/ANCHOR
+```
+    return sum(x.amount for x in xs if x.active)
+```

@@ -1,0 +1,57 @@
+{
+  "name": "tiny-edit",
+  "version": "0.1.0",
+  "description": "TW1 — token-efficient code edit protocol. LLMs emit tiny diff frames; tiny-edit applies them locally. 85–98% output-token reduction vs full-file rewrites.",
+  "keywords": [
+    "llm",
+    "claude",
+    "gpt",
+    "diff",
+    "patch",
+    "token-efficient",
+    "code-edit",
+    "ai-tools",
+    "anthropic",
+    "openai"
+  ],
+  "license": "MIT",
+  "author": "Kartik",
+  "type": "module",
+  "main": "dist/cli/index.js",
+  "bin": {
+    "tiny-edit": "dist/cli/index.js",
+    "te": "dist/cli/index.js"
+  },
+  "files": [
+    "dist",
+    "prompts",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/cli/index.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "tsc --noEmit",
+    "prepublishOnly": "npm run build && npm test"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.4.0",
+    "vitest": "^1.4.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/USERNAME/tiny-edit.git"
+  },
+  "bugs": {
+    "url": "https://github.com/USERNAME/tiny-edit/issues"
+  },
+  "homepage": "https://github.com/USERNAME/tiny-edit#readme"
+}
