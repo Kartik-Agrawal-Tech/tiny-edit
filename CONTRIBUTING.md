@@ -3,7 +3,7 @@
 ## Getting started
 
 ```bash
-git clone https://github.com/Kartik-Agrawal-Tech/patchframe.git
+git clone https://github.com/nullcore-io/patchframe.git
 cd patchframe
 npm install
 npm run build
@@ -27,7 +27,7 @@ npm test        # 53 tests must pass
 
 ## Reporting bugs
 
-Open an issue at <https://github.com/Kartik-Agrawal-Tech/patchframe/issues> with:
+Open an issue at <https://github.com/nullcore-io/patchframe/issues> with:
 - Node.js version
 - OS
 - Exact command run

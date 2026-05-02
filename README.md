@@ -59,7 +59,7 @@ npx patchframe
 
 **Develop from source:**
 ```bash
-git clone https://github.com/Kartik-Agrawal-Tech/patchframe.git
+git clone https://github.com/nullcore-io/patchframe.git
 cd patchframe
 npm install
 npm run build
