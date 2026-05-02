@@ -12,3 +12,14 @@ vscode-extension/out/
 .vscode/
 .idea/
 *.tsbuildinfo
+
+# AI tooling — not for public repo
+CLAUDE.md
+.claude/
+.cursor/
+.cursorignore
+.cursorindexingignore
+.cursorrules
+.aider*
+.continue/
+.copilot/

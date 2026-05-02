@@ -57,6 +57,16 @@ npx tiny-edit
 
 **Requirements:** Node.js 18+
 
+**Develop from source:**
+```bash
+git clone https://github.com/Kartik-Agrawal-Tech/tiny-edit.git
+cd tiny-edit
+npm install
+npm run build
+npm link        # makes `tiny-edit` and `te` available globally
+npm test        # 53 tests
+```
+
 ---
 
 ## Setup
@@ -280,9 +290,9 @@ Metrics are stored locally in `.tiny-edit/metrics.jsonl` (append-only JSONL). Ea
 - [x] MVP — anchor ops (`R`, `I`, `D`, `+`, `-`, `MV`) for all text files
 - [x] Token savings tracker + stats dashboard (`tiny-edit stats`)
 - [x] Symbol ops — `M $functionName@sha6` via tree-sitter (JS/TS/Python)
-- [ ] VS Code extension — auto-inject file index into Copilot/Cursor system prompt
+- [x] VS Code extension — auto-inject file index into Copilot/Cursor system prompt
 - [ ] Streaming apply — apply partial frames as LLM streams (cut perceived latency)
-- [ ] MCP server — expose tiny-edit as an MCP tool for Claude Code / Cursor
+- [x] MCP server — expose tiny-edit as an MCP tool for Claude Code / Cursor
 
 ---
 
