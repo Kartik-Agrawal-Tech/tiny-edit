@@ -106,6 +106,27 @@ TW1
 | `+` | Create new file | `+ '<path>'` + fence |
 | `-` | Delete file | `- <fid>` |
 | `MV` | Rename file | `MV <fid> '<new-path>'` |
+| `M` | Replace function/class by symbol name | `M <fid> $<symbol>@<sigSha6>` + fence |
+
+### Symbol ops (`M`)
+
+`M` replaces an entire function or class by name — no line numbers needed. The LLM names the symbol; tiny-edit locates it via tree-sitter AST parsing and replaces it atomically.
+
+```
+TW1
+M a $parseValue@abc123
+```
+function parseValue(raw: string): number {
+  return parseInt(raw, 10) * 2;
+}
+```
+```
+
+Supported languages: TypeScript (`.ts`, `.tsx`), JavaScript (`.js`, `.jsx`, `.mjs`), Python (`.py`).
+
+Use dot notation for class members: `$Calculator.add@sha6`
+
+`sigSha6` = sha6 of the declaration line. Acts as a drift guard — if the function was renamed or refactored since the index was built, tiny-edit emits `E_SYMBOL` with a candidate list instead of patching the wrong symbol.
 
 ### Anchors
 
@@ -120,6 +141,7 @@ E_ANCHOR_DRIFT fid=a line=42 want=9c1f0d got=8af201
 E_FID fid=z unknown fid. known=[a,b,c,d]
 E_OVERLAP fid=a overlapping ops on lines 42,43
 E_PARSE TW1 parse error at line 3: unterminated fence block
+E_SYMBOL fid=a symbol "$parseOld" not found. available=[parseValue,format,slugify]
 ```
 
 ---
@@ -174,7 +196,7 @@ Works with: Claude (Anthropic), GPT-4o (OpenAI), Gemini 1.5 Pro, Mistral Large, 
 - **Model-agnostic.** Plain text DSL, no structured output required.
 - **Deterministic.** Same TW1 frame + same file state = same result, always.
 - **Safe.** Anchor validation prevents stale patches. Atomic writes with rollback.
-- **Zero runtime dependencies.** Ships as a single Node.js binary, no Python, no tree-sitter (MVP).
+- **Minimal deps.** Core anchor ops are zero-dep. Symbol ops add tree-sitter for accurate AST parsing.
 - **Composable.** Pipe-friendly. Works with any editor, IDE, or automation script.
 
 ---
@@ -213,8 +235,9 @@ Metrics are stored locally in `.tiny-edit/metrics.jsonl` (append-only JSONL). Ea
 ## Roadmap
 
 - [x] MVP — anchor ops (`R`, `I`, `D`, `+`, `-`, `MV`) for all text files
-- [ ] Symbol ops — `M $functionName` using tree-sitter (skip re-anchoring large functions)
-- [ ] Language server integration — VS Code extension that auto-injects the index
+- [x] Token savings tracker + stats dashboard (`tiny-edit stats`)
+- [x] Symbol ops — `M $functionName@sha6` via tree-sitter (JS/TS/Python)
+- [ ] VS Code extension — auto-inject file index into Copilot/Cursor system prompt
 - [ ] Streaming apply — apply partial frames as LLM streams (cut perceived latency)
 - [ ] MCP server — expose tiny-edit as an MCP tool for Claude Code / Cursor
 
