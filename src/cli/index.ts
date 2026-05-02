@@ -5,6 +5,7 @@ import { buildIndex, formatIndex, refreshEntry } from "./index-files.js";
 import { parseTW1, ParseError } from "./parse.js";
 import { applyFrame, formatApplyResult } from "./apply.js";
 import { formatError, parseError } from "./errors.js";
+import { recordApply, loadMetrics, summarize, formatSummary } from "./metrics.js";
 
 const STATE_DIR = ".tiny-edit";
 const STATE_FILE = "state.json";
@@ -38,13 +39,21 @@ USAGE
   tiny-edit init [dir]        index repo, write .tiny-edit/state.json
   tiny-edit index [dir]       print file index to stdout
   tiny-edit apply [file]      read TW1 frame from file (or stdin) and apply
+  tiny-edit stats             show token savings dashboard
   tiny-edit help              show this message
 
 EXAMPLES
   tiny-edit init               # initialise in current directory
   tiny-edit apply patch.tw1    # apply patch file
   echo "TW1\\nR a ..." | tiny-edit apply  # pipe from LLM output
+  tiny-edit stats              # view cumulative savings
 `);
+}
+
+async function cmdStats(root: string): Promise<void> {
+  const entries = loadMetrics(root);
+  const summary = summarize(entries);
+  console.log(formatSummary(summary));
 }
 
 async function cmdInit(root: string): Promise<void> {
@@ -91,6 +100,14 @@ async function cmdApply(root: string, source: string | null): Promise<void> {
   if (result.ok) {
     console.log("Applied:");
     console.log(formatApplyResult(result));
+
+    // Record metrics for this apply
+    const entry = recordApply(root, input, result.captures);
+    const savedStr = entry.savedPct > 0
+      ? `  saved ~${entry.savedTokens.toLocaleString()} tokens (${entry.savedPct}% vs full-file rewrite)`
+      : "";
+    if (savedStr) console.log(savedStr);
+
     // Refresh state
     for (const p of result.written) {
       if (!p.startsWith("(deleted)")) {
@@ -118,6 +135,9 @@ async function main(): Promise<void> {
       break;
     case "apply":
       await cmdApply(process.cwd(), args[0] ?? null);
+      break;
+    case "stats":
+      await cmdStats(process.cwd());
       break;
     case "help":
     case "--help":

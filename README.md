@@ -179,6 +179,37 @@ Works with: Claude (Anthropic), GPT-4o (OpenAI), Gemini 1.5 Pro, Mistral Large, 
 
 ---
 
+## Token savings dashboard
+
+Every `tiny-edit apply` records a metrics entry in `.tiny-edit/metrics.jsonl`. Run `tiny-edit stats` to see cumulative savings:
+
+```
+  ┌─ tiny-edit metrics ──────────────────────────────────┐
+  │  Total edits:        47                              │
+  │  Files touched:      83                              │
+  │  Tokens emitted:     4,821                           │
+  │  Baseline (full):    61,400                          │
+  │  Tokens saved:       56,579                          │
+  │  Avg saved per edit: 92.1%                           │
+  │  Best edit savings:  98.4%                           │
+  ├──────────────────────────────────────────────────────┤
+  │  ████████████████████████████░  92.1%               │
+  └──────────────────────────────────────────────────────┘
+  Period: 2026-05-01 → 2026-05-02
+```
+
+After each successful apply, a one-liner is printed inline:
+
+```
+Applied:
+  wrote src/auth.py
+  saved ~1,240 tokens (93.4% vs full-file rewrite)
+```
+
+Metrics are stored locally in `.tiny-edit/metrics.jsonl` (append-only JSONL). Each entry records: timestamp, op count, files touched, input tokens, baseline tokens, tokens saved, and savings percentage. Nothing is sent anywhere.
+
+---
+
 ## Roadmap
 
 - [x] MVP — anchor ops (`R`, `I`, `D`, `+`, `-`, `MV`) for all text files

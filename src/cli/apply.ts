@@ -18,10 +18,17 @@ import {
   type TW1Error,
 } from "./errors.js";
 
+export interface FileCapture {
+  path: string;
+  before: string;
+  after: string;
+}
+
 export interface ApplyResult {
   ok: boolean;
   errors: TW1Error[];
   written: string[];
+  captures: FileCapture[];
 }
 
 function sha6(line: string): string {
@@ -91,6 +98,7 @@ function applyLineOps(original: string[], ops: LineOp[]): string[] {
 export function applyFrame(ops: Op[], index: FileIndex): ApplyResult {
   const errors: TW1Error[] = [];
   const written: string[] = [];
+  const captures: FileCapture[] = [];
 
   // Group file-mutation ops by fid
   const fileOps = new Map<string, LineOp[]>();
@@ -138,7 +146,7 @@ export function applyFrame(ops: Op[], index: FileIndex): ApplyResult {
     }
   }
 
-  if (errors.length > 0) return { ok: false, errors, written };
+  if (errors.length > 0) return { ok: false, errors, written, captures };
 
   // Dry-run: validate all anchors before touching disk
   for (const [fid, lineOps] of fileOps) {
@@ -174,7 +182,7 @@ export function applyFrame(ops: Op[], index: FileIndex): ApplyResult {
     if (overlapErr) errors.push(overlapErr);
   }
 
-  if (errors.length > 0) return { ok: false, errors, written };
+  if (errors.length > 0) return { ok: false, errors, written, captures };
 
   // Commit phase: apply all changes atomically (in-memory apply, then write)
   const snapshots = new Map<string, { abs: string; original: string }>();
@@ -189,10 +197,12 @@ export function applyFrame(ops: Op[], index: FileIndex): ApplyResult {
       snapshots.set(fid, { abs, original: content });
 
       const updated = applyLineOps(lines, lineOps);
+      const updatedContent = updated.join("\n");
       const tmp = abs + ".tw1.tmp";
-      writeFileSync(tmp, updated.join("\n"), "utf8");
+      writeFileSync(tmp, updatedContent, "utf8");
       renameSync(tmp, abs);
       written.push(entry.path);
+      captures.push({ path: entry.path, before: content, after: updatedContent });
     }
 
     // Create new files
@@ -201,6 +211,7 @@ export function applyFrame(ops: Op[], index: FileIndex): ApplyResult {
       mkdirSync(dirname(abs), { recursive: true });
       writeFileSync(abs, payload, "utf8");
       written.push(path);
+      captures.push({ path, before: "", after: payload });
     }
 
     // Delete files
@@ -226,10 +237,10 @@ export function applyFrame(ops: Op[], index: FileIndex): ApplyResult {
       try { writeFileSync(snap.abs, snap.original, "utf8"); } catch { /* best-effort */ }
     }
     errors.push({ code: "E_PARSE", detail: String(err) });
-    return { ok: false, errors, written: [] };
+    return { ok: false, errors, written: [], captures: [] };
   }
 
-  return { ok: true, errors: [], written };
+  return { ok: true, errors: [], written, captures };
 }
 
 export function formatApplyResult(result: ApplyResult): string {
