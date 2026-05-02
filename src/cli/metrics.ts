@@ -36,9 +36,7 @@ export interface MetricsSummary {
  */
 export function estimateTokens(text: string): number {
   if (!text) return 0;
-  const byChars = Math.ceil(text.length / 4);
-  const byWords = Math.ceil(text.split(/\s+/).filter(Boolean).length / 0.75);
-  return Math.max(byChars, byWords);
+  return Math.ceil(text.length / 4);
 }
 
 export function recordApply(
@@ -51,12 +49,12 @@ export function recordApply(
   const inputBytes = Buffer.byteLength(inputFrame, "utf8");
   // Baseline: what the LLM would have emitted if it rewrote each touched file in full
   const baselineBytes = rewrittenFiles.reduce(
-    (sum, f) => sum + Buffer.byteLength(f.after, "utf8"),
+    (sum, f) => sum + Buffer.byteLength(f.before, "utf8"),
     0,
   );
   const inputTokens = estimateTokens(inputFrame);
   const baselineTokens = rewrittenFiles.reduce(
-    (sum, f) => sum + estimateTokens(f.after),
+    (sum, f) => sum + estimateTokens(f.before),
     0,
   );
   const savedTokens = Math.max(0, baselineTokens - inputTokens);

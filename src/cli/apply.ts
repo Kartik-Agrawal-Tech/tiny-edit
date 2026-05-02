@@ -8,15 +8,19 @@ import {
   mkdirSync,
 } from "node:fs";
 import { join, dirname } from "node:path";
-import type { Op, Anchor, ReplaceOp, InsertOp, DeleteOp } from "./parse.js";
+import type { Op, Anchor, ReplaceOp, InsertOp, DeleteOp, SymbolOp } from "./parse.js";
 import type { FileIndex } from "./index-files.js";
 import {
   formatError,
   anchorDrift,
   unknownFid,
   overlapError,
+  symbolNotFound,
+  symbolDrift,
+  unsupportedLang,
   type TW1Error,
 } from "./errors.js";
+import { findSymbol, listSymbols, detectLang } from "./symbols.js";
 
 export interface FileCapture {
   path: string;
@@ -95,6 +99,27 @@ function applyLineOps(original: string[], ops: LineOp[]): string[] {
   return result;
 }
 
+function resolveSymbolOp(op: SymbolOp, index: FileIndex): LineOp | TW1Error {
+  const entry = index.entries.get(op.fid)!;
+  const lang = detectLang(entry.path);
+  if (!lang) return unsupportedLang(op.fid, entry.path.slice(entry.path.lastIndexOf('.')));
+
+  const abs = join(index.root, entry.path);
+  const content = readFileSync(abs, "utf8");
+  const loc = findSymbol(content, lang, op.symbolPath);
+
+  if (!loc) {
+    const candidates = listSymbols(content, lang);
+    return symbolNotFound(op.fid, op.symbolPath, candidates);
+  }
+
+  if (loc.sigSha6 !== op.sigSha6) {
+    return symbolDrift(op.fid, op.symbolPath, op.sigSha6, loc.sigSha6);
+  }
+
+  return { kind: "replace", from: loc.startLine, to: loc.endLine, payload: op.payload };
+}
+
 export function applyFrame(ops: Op[], index: FileIndex): ApplyResult {
   const errors: TW1Error[] = [];
   const written: string[] = [];
@@ -143,6 +168,13 @@ export function applyFrame(ops: Op[], index: FileIndex): ApplyResult {
       fileOps.get(op.fid)!.push({ kind: "insert", after: op.after.line, payload: op.payload });
     } else if (op.code === "D") {
       fileOps.get(op.fid)!.push({ kind: "delete", from: op.from.line, to: op.to.line });
+    } else if (op.code === "M") {
+      const symErr = resolveSymbolOp(op, index);
+      if ("code" in symErr) {
+        errors.push(symErr);
+      } else {
+        fileOps.get(op.fid)!.push(symErr);
+      }
     }
   }
 

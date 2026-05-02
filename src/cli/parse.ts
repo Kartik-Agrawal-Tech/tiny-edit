@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 
-export type OpCode = "R" | "I" | "D" | "+" | "-" | "MV";
+export type OpCode = "R" | "I" | "D" | "+" | "-" | "MV" | "M";
 
 export interface Anchor {
   line: number;
@@ -45,7 +45,14 @@ export interface MoveOp extends BaseOp {
   newPath: string;
 }
 
-export type Op = ReplaceOp | InsertOp | DeleteOp | CreateOp | DeleteFileOp | MoveOp;
+export interface SymbolOp extends BaseOp {
+  code: "M";
+  symbolPath: string; // "funcName" or "ClassName.method"
+  sigSha6: string;    // sha6 of declaration line — drift guard
+  payload: string;
+}
+
+export type Op = ReplaceOp | InsertOp | DeleteOp | CreateOp | DeleteFileOp | MoveOp | SymbolOp;
 
 export interface TW1Frame {
   ops: Op[];
@@ -119,7 +126,7 @@ export function parseTW1(input: string): TW1Frame {
 
     switch (code) {
       case "R": {
-        if (parts.length < 4) throw new ParseError("R needs fid from..to anchors", i);
+        if (parts.length < 3) throw new ParseError("R needs fid from..to anchors", i);
         const fid = parts[1];
         const [fromRaw, toRaw] = parts[2].split("..");
         if (!fromRaw || !toRaw) throw new ParseError("R range must be @from..@to", i);
@@ -176,6 +183,23 @@ export function parseTW1(input: string): TW1Frame {
         const newPath = parseStr(parts[2], i);
         ops.push({ code: "MV", fid, newPath });
         i++;
+        break;
+      }
+      case "M": {
+        if (parts.length < 3) throw new ParseError("M needs fid $symbol@sha6", i);
+        const fid = parts[1];
+        const symRaw = parts[2];
+        if (!symRaw.startsWith("$")) throw new ParseError('M symbol must start with $', i);
+        const atIdx = symRaw.lastIndexOf("@");
+        if (atIdx <= 1) throw new ParseError("M symbol must be $name@sha6", i);
+        const symbolPath = symRaw.slice(1, atIdx);
+        const sigSha6 = symRaw.slice(atIdx + 1);
+        if (!/^[0-9a-f]{6}$/i.test(sigSha6)) throw new ParseError("M sigSha6 must be 6 hex chars", i);
+        i++;
+        if (!lines[i]?.startsWith("`")) throw new ParseError("M op must be followed by fence", i);
+        const { payload, end } = collectFence(lines, i);
+        i = end + 1;
+        ops.push({ code: "M", fid, symbolPath, sigSha6: sigSha6.toLowerCase(), payload });
         break;
       }
       default:

@@ -1,6 +1,6 @@
 export type TW1ErrorCode =
   | "E_ANCHOR_DRIFT"
-  | "E_SYM_MISSING"
+  | "E_SYMBOL"
   | "E_PARSE"
   | "E_FID"
   | "E_OVERLAP"
@@ -42,4 +42,28 @@ export function parseError(msg: string): TW1Error {
 
 export function overlapError(fid: string, lines: number[]): TW1Error {
   return { code: "E_OVERLAP", fid, detail: `overlapping ops on lines ${lines.join(",")}` };
+}
+
+export function symbolNotFound(fid: string, symbolPath: string, candidates: string[]): TW1Error {
+  return {
+    code: "E_SYMBOL",
+    fid,
+    detail: `symbol "$${symbolPath}" not found. available=[${candidates.slice(0, 8).join(",")}]`,
+  };
+}
+
+export function symbolDrift(fid: string, symbolPath: string, want: string, got: string): TW1Error {
+  return {
+    code: "E_SYMBOL",
+    fid,
+    detail: `symbol "$${symbolPath}" sig drift want=${want} got=${got}`,
+  };
+}
+
+export function unsupportedLang(fid: string, ext: string): TW1Error {
+  return {
+    code: "E_SYMBOL",
+    fid,
+    detail: `unsupported language "${ext}" for symbol op. supported=[.ts,.tsx,.js,.jsx,.py]`,
+  };
 }
