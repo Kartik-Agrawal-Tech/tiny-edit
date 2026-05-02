@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { join, resolve, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 import { buildIndex, formatIndex, refreshEntry } from "./index-files.js";
 import { parseTW1, ParseError } from "./parse.js";
 import { applyFrame, formatApplyResult } from "./apply.js";
@@ -71,12 +72,13 @@ async function cmdIndex(root: string): Promise<void> {
   console.log(formatIndex(index));
 }
 
-async function cmdApply(root: string, source: string | null): Promise<void> {
+async function cmdApply(root: string, source: string | null, json = false): Promise<void> {
   let input: string;
   if (source && existsSync(source)) {
     input = readFileSync(source, "utf8");
   } else if (source) {
-    console.error(`File not found: ${source}`);
+    if (json) process.stdout.write(JSON.stringify({ ok: false, written: [], errors: [{ code: "E_PARSE", detail: `File not found: ${source}` }] }));
+    else console.error(`File not found: ${source}`);
     process.exit(1);
   } else {
     input = readFileSync("/dev/stdin", "utf8");
@@ -86,11 +88,9 @@ async function cmdApply(root: string, source: string | null): Promise<void> {
   try {
     frame = parseTW1(input);
   } catch (err) {
-    if (err instanceof ParseError) {
-      console.error(formatError(parseError(err.message)));
-    } else {
-      console.error(String(err));
-    }
+    const detail = err instanceof ParseError ? err.message : String(err);
+    if (json) process.stdout.write(JSON.stringify({ ok: false, written: [], errors: [{ code: "E_PARSE", detail }] }));
+    else console.error(formatError(parseError(detail)));
     process.exit(1);
   }
 
@@ -98,17 +98,16 @@ async function cmdApply(root: string, source: string | null): Promise<void> {
   const result = applyFrame(frame.ops, index);
 
   if (result.ok) {
-    console.log("Applied:");
-    console.log(formatApplyResult(result));
-
-    // Record metrics for this apply
     const entry = recordApply(root, input, result.captures);
-    const savedStr = entry.savedPct > 0
-      ? `  saved ~${entry.savedTokens.toLocaleString()} tokens (${entry.savedPct}% vs full-file rewrite)`
-      : "";
-    if (savedStr) console.log(savedStr);
-
-    // Refresh state
+    if (json) {
+      process.stdout.write(JSON.stringify({ ok: true, written: result.written, savedTokens: entry.savedTokens, savedPct: entry.savedPct }));
+    } else {
+      console.log("Applied:");
+      console.log(formatApplyResult(result));
+      if (entry.savedPct > 0) {
+        console.log(`  saved ~${entry.savedTokens.toLocaleString()} tokens (${entry.savedPct}% vs full-file rewrite)`);
+      }
+    }
     for (const p of result.written) {
       if (!p.startsWith("(deleted)")) {
         refreshEntry(index, p.includes(" → ") ? p.split(" → ")[1] : p);
@@ -116,8 +115,18 @@ async function cmdApply(root: string, source: string | null): Promise<void> {
     }
     saveState(root, { root, indexSnapshot: formatIndex(index) });
   } else {
-    console.error("Apply failed:");
-    console.error(formatApplyResult(result));
+    if (json) process.stdout.write(JSON.stringify({ ok: false, written: [], errors: result.errors }));
+    else { console.error("Apply failed:"); console.error(formatApplyResult(result)); }
+    process.exit(1);
+  }
+}
+
+function cmdPrompt(): void {
+  const promptPath = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "prompts", "tw1_system.md");
+  if (existsSync(promptPath)) {
+    process.stdout.write(readFileSync(promptPath, "utf8"));
+  } else {
+    console.error("prompts/tw1_system.md not found");
     process.exit(1);
   }
 }
@@ -133,11 +142,17 @@ async function main(): Promise<void> {
     case "index":
       await cmdIndex(root);
       break;
-    case "apply":
-      await cmdApply(process.cwd(), args[0] ?? null);
+    case "apply": {
+      const jsonFlag = args.includes("--json");
+      const fileArg = args.find((a) => !a.startsWith("-")) ?? null;
+      await cmdApply(process.cwd(), fileArg, jsonFlag);
       break;
+    }
     case "stats":
       await cmdStats(process.cwd());
+      break;
+    case "prompt":
+      cmdPrompt();
       break;
     case "help":
     case "--help":

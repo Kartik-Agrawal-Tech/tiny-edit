@@ -1,0 +1,36 @@
+{
+  "name": "tiny-edit",
+  "displayName": "tiny-edit",
+  "description": "Auto-apply TW1 token-efficient code patches. AI emits compact frames, extension applies instantly — zero clicks.",
+  "version": "0.1.0",
+  "publisher": "kartik-agrawal-tech",
+  "engines": { "vscode": "^1.80.0" },
+  "categories": ["Other"],
+  "keywords": ["ai", "llm", "cursor", "copilot", "token-efficient", "code-edit"],
+  "activationEvents": ["onStartupFinished"],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "tinyEdit.showStats",
+        "title": "tiny-edit: Show Token Savings"
+      },
+      {
+        "command": "tinyEdit.refreshIndex",
+        "title": "tiny-edit: Refresh File Index"
+      }
+    ]
+  },
+  "scripts": {
+    "build": "node esbuild.mjs",
+    "watch": "node esbuild.mjs --watch",
+    "package": "node esbuild.mjs && npx @vscode/vsce package --no-dependencies",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.80.0",
+    "@vscode/vsce": "^2.24.0",
+    "esbuild": "^0.20.0",
+    "typescript": "^5.4.0"
+  }
+}

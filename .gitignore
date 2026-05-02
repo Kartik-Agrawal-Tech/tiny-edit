@@ -8,6 +8,7 @@ coverage/
 .tokenwire/
 .tiny-edit/
 lab/.work/
+vscode-extension/out/
 .vscode/
 .idea/
 *.tsbuildinfo

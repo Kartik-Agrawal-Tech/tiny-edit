@@ -28,6 +28,10 @@ D <fid> @<line>/<sha6>..@<line>/<sha6>
 ```
 - <fid>
 MV <fid> '<new/path.ext>'
+M <fid> $<symbolName>@<sigSha6>
+```
+<full replacement function or class>
+```
 
 ## Rules
 1. Emit `TW1` header exactly once, then op lines.
@@ -40,6 +44,8 @@ MV <fid> '<new/path.ext>'
 8. End output after last frame. No summary, no explanation, no trailing text.
 9. For new files: `+` op then fence with full content.
 10. For rename-only: `MV` op, no fence.
+11. M op: use `$funcName@sigSha6` where sigSha6 = sha6 of the function's first line. Use `$Class.method@sigSha6` for methods. Payload = full replacement function/class.
+12. **When editing in VS Code with the tiny-edit extension**: write your TW1 frame to a file named `patch.tw1` in the workspace root. The extension will apply it automatically.
 
 ## Examples
 
