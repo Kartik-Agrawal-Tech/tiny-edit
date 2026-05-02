@@ -2,6 +2,7 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { join, resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createHash } from "node:crypto";
 import { buildIndex, formatIndex, refreshEntry } from "./index-files.js";
 import { parseTW1, ParseError } from "./parse.js";
 import { applyFrame, formatApplyResult } from "./apply.js";
@@ -57,14 +58,49 @@ async function cmdStats(root: string): Promise<void> {
   console.log(formatSummary(summary));
 }
 
+const CLAUDE_MD_MARKER_START = "<!-- tiny-edit:start -->";
+const CLAUDE_MD_MARKER_END = "<!-- tiny-edit:end -->";
+
+function buildClaudeMdSection(index: string): string {
+  const promptPath = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "prompts", "tw1_system.md");
+  const prompt = existsSync(promptPath) ? readFileSync(promptPath, "utf8") : "";
+  return `${CLAUDE_MD_MARKER_START}
+## tiny-edit — TW1 token-efficient code editing
+
+${prompt}
+
+## File index (id|path|sha8|loc)
+${index}
+${CLAUDE_MD_MARKER_END}`;
+}
+
+function injectClaudeMd(root: string, index: string): void {
+  const claudeMdPath = join(root, "CLAUDE.md");
+  const existing = existsSync(claudeMdPath) ? readFileSync(claudeMdPath, "utf8") : "";
+  const start = existing.indexOf(CLAUDE_MD_MARKER_START);
+  const end = existing.indexOf(CLAUDE_MD_MARKER_END);
+  const section = buildClaudeMdSection(index);
+
+  let updated: string;
+  if (start !== -1 && end !== -1) {
+    updated = existing.slice(0, start) + section + existing.slice(end + CLAUDE_MD_MARKER_END.length);
+  } else {
+    updated = existing ? `${existing}\n\n${section}\n` : `${section}\n`;
+  }
+  writeFileSync(claudeMdPath, updated, "utf8");
+}
+
 async function cmdInit(root: string): Promise<void> {
   console.log(`Indexing ${root} ...`);
   const index = await buildIndex(root);
   const snapshot = formatIndex(index);
   saveState(root, { root, indexSnapshot: snapshot });
+  injectClaudeMd(root, snapshot);
   console.log(`Indexed ${index.entries.size} files.`);
   console.log(`\nFile index (inject into LLM system prompt):\n`);
   console.log(snapshot);
+  console.log(`\nCLAUDE.md updated with TW1 system prompt.`);
+  console.log(`MCP server: add to .claude/settings.json → see README for setup.`);
 }
 
 async function cmdIndex(root: string): Promise<void> {
@@ -154,6 +190,11 @@ async function main(): Promise<void> {
     case "prompt":
       cmdPrompt();
       break;
+    case "mcp": {
+      const { startMcpServer } = await import("../mcp/server.js");
+      await startMcpServer();
+      break;
+    }
     case "help":
     case "--help":
     case "-h":

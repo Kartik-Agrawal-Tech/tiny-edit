@@ -58,13 +58,44 @@ function spliceSection(existing: string, section: string): string {
   return existing ? `${existing}\n\n${section}\n` : `${section}\n`;
 }
 
-export async function injectCursorRules(workspaceRoot: string): Promise<boolean> {
+const CLAUDE_MD_START = '<!-- tiny-edit:start -->';
+const CLAUDE_MD_END = '<!-- tiny-edit:end -->';
+
+function buildClaudeMdSection(index: string): string {
+  return `${CLAUDE_MD_START}
+## tiny-edit — TW1 protocol
+
+${BASE_PROMPT}
+
+## File index (id|path|sha8|loc)
+${index}
+${CLAUDE_MD_END}`;
+}
+
+function spliceClaudeMd(existing: string, section: string): string {
+  const start = existing.indexOf(CLAUDE_MD_START);
+  const end = existing.indexOf(CLAUDE_MD_END);
+  if (start !== -1 && end !== -1) {
+    return existing.slice(0, start) + section + existing.slice(end + CLAUDE_MD_END.length);
+  }
+  return existing ? `${existing}\n\n${section}\n` : `${section}\n`;
+}
+
+export async function injectAll(workspaceRoot: string): Promise<boolean> {
   const index = await runIndex(workspaceRoot);
   if (!index) return false;
 
+  // .cursorrules (Cursor AI)
   const rulesPath = join(workspaceRoot, '.cursorrules');
-  const existing = existsSync(rulesPath) ? readFileSync(rulesPath, 'utf8') : '';
-  const updated = spliceSection(existing, buildSection(index));
-  writeFileSync(rulesPath, updated, 'utf8');
+  const existingRules = existsSync(rulesPath) ? readFileSync(rulesPath, 'utf8') : '';
+  writeFileSync(rulesPath, spliceSection(existingRules, buildSection(index)), 'utf8');
+
+  // CLAUDE.md (Claude Code)
+  const claudePath = join(workspaceRoot, 'CLAUDE.md');
+  const existingClaude = existsSync(claudePath) ? readFileSync(claudePath, 'utf8') : '';
+  writeFileSync(claudePath, spliceClaudeMd(existingClaude, buildClaudeMdSection(index)), 'utf8');
+
   return true;
 }
+
+export const injectCursorRules = injectAll;

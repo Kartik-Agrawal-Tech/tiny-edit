@@ -59,6 +59,49 @@ npx tiny-edit
 
 ---
 
+## Setup
+
+### Claude Code (Anthropic CLI)
+
+The fastest integration — tiny-edit exposes an MCP server. Claude gets `tw1_apply`, `tw1_index`, and `tw1_stats` tools natively, no file writing needed.
+
+**1. Add to `.claude/settings.json`:**
+```json
+{
+  "mcpServers": {
+    "tiny-edit": {
+      "command": "npx",
+      "args": ["tiny-edit", "mcp"]
+    }
+  }
+}
+```
+
+**2. Init your project:**
+```bash
+tiny-edit init
+```
+This indexes your repo and writes a TW1 section into `CLAUDE.md`. Claude Code reads `CLAUDE.md` automatically — zero extra steps.
+
+**3. Start editing:**
+```
+> refactor the parseValue function to handle negative numbers
+```
+Claude emits a TW1 frame and calls `tw1_apply` directly. Files update, token savings tracked.
+
+---
+
+### Cursor / VS Code
+
+Install the VS Code extension:
+```bash
+cd vscode-extension && npm install && npm run package
+code --install-extension tiny-edit-0.1.0.vsix
+```
+On workspace open, the extension silently injects the system prompt into `.cursorrules` and watches for `patch.tw1` files. Ask Cursor to make changes — it writes `patch.tw1`, the extension auto-applies.
+
+---
+
 ## Quickstart
 
 ```bash
