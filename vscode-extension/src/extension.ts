@@ -14,17 +14,17 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
   const workspaceRoot = workspaceFolders[0].uri.fsPath;
 
-  // Verify tiny-edit is accessible
+  // Verify patchframe is accessible
   const { exitCode } = await (await import('./cli')).runCli(['--help'], workspaceRoot);
   if (exitCode !== 0 && exitCode !== 1) {
     vscode.window.showWarningMessage(
-      'tiny-edit not found. Install with: npm install -g tiny-edit',
+      'patchframe not found. Install with: npm install -g patchframe',
     );
     return;
   }
 
-  // Init: ensure .tiny-edit/state.json exists
-  if (!existsSync(join(workspaceRoot, '.tiny-edit', 'state.json'))) {
+  // Init: ensure .patchframe/state.json exists
+  if (!existsSync(join(workspaceRoot, '.patchframe', 'state.json'))) {
     await runInit(workspaceRoot);
   }
 
@@ -44,12 +44,12 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     vscode.commands.registerCommand('tinyEdit.showStats', async () => {
       const stats = await runStats(workspaceRoot);
       if (stats) {
-        const panel = vscode.window.createOutputChannel('tiny-edit stats');
+        const panel = vscode.window.createOutputChannel('patchframe stats');
         panel.clear();
         panel.appendLine(stats);
         panel.show();
       } else {
-        vscode.window.showInformationMessage('No tiny-edit stats yet. Apply a patch first.');
+        vscode.window.showInformationMessage('No patchframe stats yet. Apply a patch first.');
       }
     }),
 
@@ -57,7 +57,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       await runInit(workspaceRoot);
       await injectCursorRules(workspaceRoot);
       if (statusBar) refresh(statusBar, workspaceRoot);
-      vscode.window.setStatusBarMessage('$(sync) tiny-edit index refreshed', 3000);
+      vscode.window.setStatusBarMessage('$(sync) patchframe index refreshed', 3000);
     }),
   );
 }

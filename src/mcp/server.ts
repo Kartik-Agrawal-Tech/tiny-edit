@@ -12,7 +12,7 @@ import { recordApply, loadMetrics, summarize, formatSummary } from "../cli/metri
 import { formatError, parseError } from "../cli/errors.js";
 
 const server = new Server(
-  { name: "tiny-edit", version: "0.1.0" },
+  { name: "patchframe", version: "0.1.0" },
   { capabilities: { tools: {} } },
 );
 

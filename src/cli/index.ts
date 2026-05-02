@@ -9,7 +9,7 @@ import { applyFrame, formatApplyResult } from "./apply.js";
 import { formatError, parseError } from "./errors.js";
 import { recordApply, loadMetrics, summarize, formatSummary } from "./metrics.js";
 
-const STATE_DIR = ".tiny-edit";
+const STATE_DIR = ".patchframe";
 const STATE_FILE = "state.json";
 
 interface State {
@@ -35,20 +35,20 @@ function saveState(root: string, state: State): void {
 
 function usage(): void {
   console.log(`
-tiny-edit — TW1 token-efficient code edit protocol
+patchframe — TW1 token-efficient code edit protocol
 
 USAGE
-  tiny-edit init [dir]        index repo, write .tiny-edit/state.json
-  tiny-edit index [dir]       print file index to stdout
-  tiny-edit apply [file]      read TW1 frame from file (or stdin) and apply
-  tiny-edit stats             show token savings dashboard
-  tiny-edit help              show this message
+  patchframe init [dir]        index repo, write .patchframe/state.json
+  patchframe index [dir]       print file index to stdout
+  patchframe apply [file]      read TW1 frame from file (or stdin) and apply
+  patchframe stats             show token savings dashboard
+  patchframe help              show this message
 
 EXAMPLES
-  tiny-edit init               # initialise in current directory
-  tiny-edit apply patch.tw1    # apply patch file
-  echo "TW1\\nR a ..." | tiny-edit apply  # pipe from LLM output
-  tiny-edit stats              # view cumulative savings
+  patchframe init               # initialise in current directory
+  patchframe apply patch.tw1    # apply patch file
+  echo "TW1\\nR a ..." | patchframe apply  # pipe from LLM output
+  patchframe stats              # view cumulative savings
 `);
 }
 
@@ -58,14 +58,14 @@ async function cmdStats(root: string): Promise<void> {
   console.log(formatSummary(summary));
 }
 
-const CLAUDE_MD_MARKER_START = "<!-- tiny-edit:start -->";
-const CLAUDE_MD_MARKER_END = "<!-- tiny-edit:end -->";
+const CLAUDE_MD_MARKER_START = "<!-- patchframe:start -->";
+const CLAUDE_MD_MARKER_END = "<!-- patchframe:end -->";
 
 function buildClaudeMdSection(index: string): string {
   const promptPath = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "prompts", "tw1_system.md");
   const prompt = existsSync(promptPath) ? readFileSync(promptPath, "utf8") : "";
   return `${CLAUDE_MD_MARKER_START}
-## tiny-edit — TW1 token-efficient code editing
+## patchframe — TW1 token-efficient code editing
 
 ${prompt}
 

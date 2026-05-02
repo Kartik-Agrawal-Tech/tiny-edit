@@ -1,6 +1,6 @@
 #!/usr/bin/env npx tsx
 /**
- * tiny-edit Lab Runner
+ * patchframe Lab Runner
  * Applies one TW1 frame per op type against sample files.
  * Tracks pass/fail and token savings vs full-file rewrite.
  * Run: npx tsx lab/run.ts
@@ -184,7 +184,7 @@ const avgSavings = savingsEntries.length > 0
   : 0;
 
 console.log();
-console.log('  tiny-edit Lab — TW1 Protocol Test Results');
+console.log('  patchframe Lab — TW1 Protocol Test Results');
 console.log('  ' + LINE);
 console.log();
 console.log(`  ${'Op'.padEnd(4)} ${'Test'.padEnd(34)} ${'in'.padStart(4)} ${'base'.padStart(5)} ${'saved'.padStart(7)}  status`);

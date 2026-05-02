@@ -1,6 +1,6 @@
 {
-  "name": "tiny-edit",
-  "displayName": "tiny-edit",
+  "name": "patchframe",
+  "displayName": "patchframe",
   "description": "Auto-apply TW1 token-efficient code patches. AI emits compact frames, extension applies instantly — zero clicks.",
   "version": "0.1.0",
   "publisher": "kartik-agrawal-tech",
@@ -13,11 +13,11 @@
     "commands": [
       {
         "command": "tinyEdit.showStats",
-        "title": "tiny-edit: Show Token Savings"
+        "title": "patchframe: Show Token Savings"
       },
       {
         "command": "tinyEdit.refreshIndex",
-        "title": "tiny-edit: Refresh File Index"
+        "title": "patchframe: Refresh File Index"
       }
     ]
   },

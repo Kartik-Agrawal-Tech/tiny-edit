@@ -25,13 +25,13 @@ export function createWatcher(
       const written = result.written.length;
       const savingsMsg = saved > 0 ? `  ·  saved ~${saved.toLocaleString()} tokens (${pct}%)` : '';
       vscode.window.setStatusBarMessage(
-        `$(check) tiny-edit applied ${written} file${written !== 1 ? 's' : ''}${savingsMsg}`,
+        `$(check) patchframe applied ${written} file${written !== 1 ? 's' : ''}${savingsMsg}`,
         5000,
       );
     } else {
       const errors = result.errors ?? [];
       const detail = errors.map(e => `${e.code}: ${e.detail}`).join('\n');
-      vscode.window.showErrorMessage(`tiny-edit apply failed:\n${detail}`);
+      vscode.window.showErrorMessage(`patchframe apply failed:\n${detail}`);
     }
   });
 

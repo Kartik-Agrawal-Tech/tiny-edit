@@ -9,7 +9,7 @@ interface MetricEntry {
 }
 
 function loadMetrics(workspaceRoot: string): MetricEntry[] {
-  const p = join(workspaceRoot, '.tiny-edit', 'metrics.jsonl');
+  const p = join(workspaceRoot, '.patchframe', 'metrics.jsonl');
   if (!existsSync(p)) return [];
   return readFileSync(p, 'utf8')
     .split('\n')
@@ -32,7 +32,7 @@ export function refresh(item: vscode.StatusBarItem, workspaceRoot: string): void
   const entries = loadMetrics(workspaceRoot);
   if (entries.length === 0) {
     item.text = '$(arrow-down) TW1 active';
-    item.tooltip = 'tiny-edit: no edits yet';
+    item.tooltip = 'patchframe: no edits yet';
     return;
   }
   const totalSaved = entries.reduce((s, e) => s + e.savedTokens, 0);
@@ -40,5 +40,5 @@ export function refresh(item: vscode.StatusBarItem, workspaceRoot: string): void
   const pct = totalBaseline > 0 ? Math.round((totalSaved / totalBaseline) * 100) : 0;
   const saved = totalSaved >= 1000 ? `${(totalSaved / 1000).toFixed(1)}k` : String(totalSaved);
   item.text = `$(arrow-down) TW1  ${pct}%  ${saved} saved`;
-  item.tooltip = `tiny-edit: ${entries.length} edits, ${saved} tokens saved vs full-file rewrites`;
+  item.tooltip = `patchframe: ${entries.length} edits, ${saved} tokens saved vs full-file rewrites`;
 }

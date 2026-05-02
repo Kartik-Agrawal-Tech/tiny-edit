@@ -2,8 +2,8 @@ import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { runIndex } from './cli';
 
-const MARKER_START = '# === tiny-edit (auto-managed) ===';
-const MARKER_END = '# === end tiny-edit ===';
+const MARKER_START = '# === patchframe (auto-managed) ===';
+const MARKER_END = '# === end patchframe ===';
 
 const BASE_PROMPT = `You output ONLY TW1 frames for code changes. No prose outside payload fences.
 
@@ -36,7 +36,7 @@ M <fid> $<symbolName>@<sigSha6>
 4. Never re-emit unchanged code. Never quote files outside fences.
 5. M op: $funcName@sigSha6 (sigSha6 = sha6 of declaration line). $Class.method@sha6 for members.
 6. IMPORTANT: Write your TW1 frame to a file named \`patch.tw1\` in the workspace root.
-   The tiny-edit VS Code extension will auto-apply it. Do NOT show file contents in chat.`;
+   The patchframe VS Code extension will auto-apply it. Do NOT show file contents in chat.`;
 
 function buildSection(index: string): string {
   return `${MARKER_START}
@@ -58,12 +58,12 @@ function spliceSection(existing: string, section: string): string {
   return existing ? `${existing}\n\n${section}\n` : `${section}\n`;
 }
 
-const CLAUDE_MD_START = '<!-- tiny-edit:start -->';
-const CLAUDE_MD_END = '<!-- tiny-edit:end -->';
+const CLAUDE_MD_START = '<!-- patchframe:start -->';
+const CLAUDE_MD_END = '<!-- patchframe:end -->';
 
 function buildClaudeMdSection(index: string): string {
   return `${CLAUDE_MD_START}
-## tiny-edit — TW1 protocol
+## patchframe — TW1 protocol
 
 ${BASE_PROMPT}
 

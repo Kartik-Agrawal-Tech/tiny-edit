@@ -1,10 +1,10 @@
-# Contributing to tiny-edit
+# Contributing to patchframe
 
 ## Getting started
 
 ```bash
-git clone https://github.com/Kartik-Agrawal-Tech/tiny-edit.git
-cd tiny-edit
+git clone https://github.com/Kartik-Agrawal-Tech/patchframe.git
+cd patchframe
 npm install
 npm run build
 npm test        # 53 tests must pass
@@ -27,7 +27,7 @@ npm test        # 53 tests must pass
 
 ## Reporting bugs
 
-Open an issue at <https://github.com/Kartik-Agrawal-Tech/tiny-edit/issues> with:
+Open an issue at <https://github.com/Kartik-Agrawal-Tech/patchframe/issues> with:
 - Node.js version
 - OS
 - Exact command run

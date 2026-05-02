@@ -13,7 +13,7 @@ import {
 let tmpDir: string;
 
 beforeEach(() => {
-  tmpDir = join(tmpdir(), `tiny-edit-metrics-${Date.now()}`);
+  tmpDir = join(tmpdir(), `patchframe-metrics-${Date.now()}`);
   mkdirSync(tmpDir);
 });
 
@@ -121,7 +121,7 @@ describe("formatSummary", () => {
     recordApply(tmpDir, "TW1\n- a", [{ path: "a.ts", before: "x".repeat(400), after: "y" }]);
     const s = summarize(loadMetrics(tmpDir));
     const out = formatSummary(s);
-    expect(out).toContain("tiny-edit metrics");
+    expect(out).toContain("patchframe metrics");
     expect(out).toContain("Tokens saved");
     expect(out).toContain("Avg saved");
   });

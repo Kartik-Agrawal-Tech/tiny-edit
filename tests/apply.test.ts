@@ -30,7 +30,7 @@ function makeIndex(root: string, files: Record<string, string>): FileIndex {
 let tmpDir: string;
 
 beforeEach(() => {
-  tmpDir = join(tmpdir(), `tiny-edit-test-${Date.now()}`);
+  tmpDir = join(tmpdir(), `patchframe-test-${Date.now()}`);
   mkdirSync(tmpDir);
 });
 

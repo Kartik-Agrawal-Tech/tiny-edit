@@ -18,7 +18,7 @@ export interface ApplyResult {
 
 export function runCli(args: string[], cwd: string): Promise<CliResult> {
   return new Promise((resolve) => {
-    execFile(NPX, ['tiny-edit', ...args], { cwd }, (err, stdout, stderr) => {
+    execFile(NPX, ['patchframe', ...args], { cwd }, (err, stdout, stderr) => {
       resolve({
         stdout: stdout ?? '',
         stderr: stderr ?? '',

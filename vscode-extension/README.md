@@ -1,4 +1,4 @@
-# tiny-edit VS Code Extension
+# patchframe VS Code Extension
 
 **Zero-click AI code patching.** Ask Cursor to make a change — it writes `patch.tw1` — the extension auto-applies it and shows token savings in the status bar.
 
@@ -13,7 +13,7 @@ No commands to run. No copy-paste. No manual steps.
 
 ## Requirements
 
-- [tiny-edit](https://www.npmjs.com/package/tiny-edit) must be installed: `npm install -g tiny-edit`
+- [patchframe](https://www.npmjs.com/package/patchframe) must be installed: `npm install -g patchframe`
 - Node.js 18+
 - [Cursor](https://cursor.sh) (or any editor that reads `.cursorrules`)
 
@@ -23,8 +23,8 @@ Two optional commands in the Command Palette:
 
 | Command | Action |
 |---|---|
-| `tiny-edit: Show Token Savings` | Display cumulative savings dashboard |
-| `tiny-edit: Refresh File Index` | Re-index repo and update `.cursorrules` |
+| `patchframe: Show Token Savings` | Display cumulative savings dashboard |
+| `patchframe: Refresh File Index` | Re-index repo and update `.cursorrules` |
 
 ## Status bar
 
@@ -33,11 +33,11 @@ Two optional commands in the Command Palette:
 ## Error handling
 
 - If apply fails: notification shows the `E_*` error code + detail. `patch.tw1` is NOT deleted so you can inspect it.
-- If tiny-edit not installed: one-time warning with install instructions.
+- If patchframe not installed: one-time warning with install instructions.
 
 ## Token efficiency
 
-| Scenario | Full file | **tiny-edit** |
+| Scenario | Full file | **patchframe** |
 |---|---|---|
 | 1-line fix in 200-LOC file | ~1 400 tokens | **~25 tokens** |
 | Replace 1 function (15 LOC) in 500-LOC file | ~3 500 tokens | **~95 tokens** |
@@ -48,6 +48,6 @@ Two optional commands in the Command Palette:
 cd vscode-extension
 npm install
 node esbuild.mjs          # build → out/extension.js
-npm run package           # produce tiny-edit-x.y.z.vsix
-code --install-extension tiny-edit-0.1.0.vsix
+npm run package           # produce patchframe-x.y.z.vsix
+code --install-extension patchframe-0.1.0.vsix
 ```

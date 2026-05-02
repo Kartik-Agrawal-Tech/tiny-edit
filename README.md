@@ -1,12 +1,12 @@
-# tiny-edit
+# patchframe
 
 **85–98% fewer output tokens when LLMs edit your code.**
 
-Instead of rewriting an entire 500-line file to fix one function, tiny-edit teaches any LLM to emit a 25-token diff frame. A local CLI validates anchors, applies the patch atomically, and rolls back on failure.
+Instead of rewriting an entire 500-line file to fix one function, patchframe teaches any LLM to emit a 25-token diff frame. A local CLI validates anchors, applies the patch atomically, and rolls back on failure.
 
 ```
-# Without tiny-edit: LLM rewrites 500 lines (~3500 tokens)
-# With tiny-edit: LLM emits 25 tokens
+# Without patchframe: LLM rewrites 500 lines (~3500 tokens)
+# With patchframe: LLM emits 25 tokens
 TW1
 R a @42/9c1f0d..@44/2b8e11
 ```
@@ -19,14 +19,14 @@ def total(xs):
 
 ## How it works
 
-1. **Index** — tiny-edit scans your repo and builds a compact file manifest (`id|path|sha8|loc`).
+1. **Index** — patchframe scans your repo and builds a compact file manifest (`id|path|sha8|loc`).
 2. **Inject** — paste the manifest + system prompt into your LLM session once (prompt-cached).
 3. **Edit** — ask the LLM for changes. It responds with a `TW1` frame instead of a full file.
-4. **Apply** — `tiny-edit apply patch.tw1` validates anchors (sha6 fingerprints), applies bottom-up, runs rollback on any failure.
+4. **Apply** — `patchframe apply patch.tw1` validates anchors (sha6 fingerprints), applies bottom-up, runs rollback on any failure.
 
 ```
 ┌────────┐  TW1 frame (25 tokens)  ┌─────────────────┐  atomic write  ┌──────────┐
-│  LLM   │ ──────────────────────▶ │  tiny-edit CLI  │ ─────────────▶ │  repo    │
+│  LLM   │ ──────────────────────▶ │  patchframe CLI  │ ─────────────▶ │  repo    │
 └────────┘                         │  parse+apply    │                └──────────┘
     ▲                              └─────────────────┘
     │ file index (cached, ~50 tokens)       │
@@ -37,7 +37,7 @@ def total(xs):
 
 ## Token efficiency
 
-| Scenario | Full file | Unified diff | **tiny-edit** |
+| Scenario | Full file | Unified diff | **patchframe** |
 |---|---|---|---|
 | 1-line fix in 200-LOC file | ~1 400 tokens | ~120 tokens | **~25 tokens** |
 | Replace 1 function (15 LOC) in 500-LOC file | ~3 500 tokens | ~180 tokens | **~95 tokens** |
@@ -50,20 +50,20 @@ def total(xs):
 ## Install
 
 ```bash
-npm install -g tiny-edit
+npm install -g patchframe
 # or run without installing:
-npx tiny-edit
+npx patchframe
 ```
 
 **Requirements:** Node.js 18+
 
 **Develop from source:**
 ```bash
-git clone https://github.com/Kartik-Agrawal-Tech/tiny-edit.git
-cd tiny-edit
+git clone https://github.com/Kartik-Agrawal-Tech/patchframe.git
+cd patchframe
 npm install
 npm run build
-npm link        # makes `tiny-edit` and `te` available globally
+npm link        # makes `patchframe` and `pf` available globally
 npm test        # 53 tests
 ```
 
@@ -73,15 +73,15 @@ npm test        # 53 tests
 
 ### Claude Code (Anthropic CLI)
 
-The fastest integration — tiny-edit exposes an MCP server. Claude gets `tw1_apply`, `tw1_index`, and `tw1_stats` tools natively, no file writing needed.
+The fastest integration — patchframe exposes an MCP server. Claude gets `tw1_apply`, `tw1_index`, and `tw1_stats` tools natively, no file writing needed.
 
 **1. Add to `.claude/settings.json`:**
 ```json
 {
   "mcpServers": {
-    "tiny-edit": {
+    "patchframe": {
       "command": "npx",
-      "args": ["tiny-edit", "mcp"]
+      "args": ["patchframe", "mcp"]
     }
   }
 }
@@ -89,7 +89,7 @@ The fastest integration — tiny-edit exposes an MCP server. Claude gets `tw1_ap
 
 **2. Init your project:**
 ```bash
-tiny-edit init
+patchframe init
 ```
 This indexes your repo and writes a TW1 section into `CLAUDE.md`. Claude Code reads `CLAUDE.md` automatically — zero extra steps.
 
@@ -106,7 +106,7 @@ Claude emits a TW1 frame and calls `tw1_apply` directly. Files update, token sav
 Install the VS Code extension:
 ```bash
 cd vscode-extension && npm install && npm run package
-code --install-extension tiny-edit-0.1.0.vsix
+code --install-extension patchframe-0.1.0.vsix
 ```
 On workspace open, the extension silently injects the system prompt into `.cursorrules` and watches for `patch.tw1` files. Ask Cursor to make changes — it writes `patch.tw1`, the extension auto-applies.
 
@@ -117,7 +117,7 @@ On workspace open, the extension silently injects the system prompt into `.curso
 ```bash
 # 1. Initialise in your project root
 cd /path/to/your/project
-tiny-edit init
+patchframe init
 
 # 2. Copy the printed file index into your LLM system prompt
 #    (see prompts/tw1_system.md for the full system prompt template)
@@ -132,10 +132,10 @@ tiny-edit init
 #    ```
 
 # 4. Save it to a file and apply
-tiny-edit apply patch.tw1
+patchframe apply patch.tw1
 
 # or pipe directly from LLM output
-echo "$LLM_OUTPUT" | tiny-edit apply
+echo "$LLM_OUTPUT" | patchframe apply
 ```
 
 ---
@@ -163,7 +163,7 @@ TW1
 
 ### Symbol ops (`M`)
 
-`M` replaces an entire function or class by name — no line numbers needed. The LLM names the symbol; tiny-edit locates it via tree-sitter AST parsing and replaces it atomically.
+`M` replaces an entire function or class by name — no line numbers needed. The LLM names the symbol; patchframe locates it via tree-sitter AST parsing and replaces it atomically.
 
 ```
 TW1
@@ -179,13 +179,13 @@ Supported languages: TypeScript (`.ts`, `.tsx`), JavaScript (`.js`, `.jsx`, `.mj
 
 Use dot notation for class members: `$Calculator.add@sha6`
 
-`sigSha6` = sha6 of the declaration line. Acts as a drift guard — if the function was renamed or refactored since the index was built, tiny-edit emits `E_SYMBOL` with a candidate list instead of patching the wrong symbol.
+`sigSha6` = sha6 of the declaration line. Acts as a drift guard — if the function was renamed or refactored since the index was built, patchframe emits `E_SYMBOL` with a candidate list instead of patching the wrong symbol.
 
 ### Anchors
 
 `@42/9c1f0d` = line 42, sha6 = first 6 hex chars of `sha256(line.trimEnd())`.
 
-Anchors prevent silent drift: if a file was edited between sessions, the sha won't match and tiny-edit emits a compact error instead of applying a wrong patch.
+Anchors prevent silent drift: if a file was edited between sessions, the sha won't match and patchframe emits a compact error instead of applying a wrong patch.
 
 ### Error frames (fed back to LLM for self-correction)
 
@@ -228,10 +228,10 @@ MV c 'src/handlers/users.ts'
 ## CLI reference
 
 ```
-tiny-edit init [dir]     Scan repo, write .tiny-edit/state.json, print index
-tiny-edit index [dir]    Print file index to stdout (no state written)
-tiny-edit apply [file]   Apply TW1 frame from file or stdin
-tiny-edit help           Show usage
+patchframe init [dir]     Scan repo, write .patchframe/state.json, print index
+patchframe index [dir]    Print file index to stdout (no state written)
+patchframe apply [file]   Apply TW1 frame from file or stdin
+patchframe help           Show usage
 ```
 
 ---
@@ -256,10 +256,10 @@ Works with: Claude (Anthropic), GPT-4o (OpenAI), Gemini 1.5 Pro, Mistral Large, 
 
 ## Token savings dashboard
 
-Every `tiny-edit apply` records a metrics entry in `.tiny-edit/metrics.jsonl`. Run `tiny-edit stats` to see cumulative savings:
+Every `patchframe apply` records a metrics entry in `.patchframe/metrics.jsonl`. Run `patchframe stats` to see cumulative savings:
 
 ```
-  ┌─ tiny-edit metrics ──────────────────────────────────┐
+  ┌─ patchframe metrics ──────────────────────────────────┐
   │  Total edits:        47                              │
   │  Files touched:      83                              │
   │  Tokens emitted:     4,821                           │
@@ -281,18 +281,18 @@ Applied:
   saved ~1,240 tokens (93.4% vs full-file rewrite)
 ```
 
-Metrics are stored locally in `.tiny-edit/metrics.jsonl` (append-only JSONL). Each entry records: timestamp, op count, files touched, input tokens, baseline tokens, tokens saved, and savings percentage. Nothing is sent anywhere.
+Metrics are stored locally in `.patchframe/metrics.jsonl` (append-only JSONL). Each entry records: timestamp, op count, files touched, input tokens, baseline tokens, tokens saved, and savings percentage. Nothing is sent anywhere.
 
 ---
 
 ## Roadmap
 
 - [x] MVP — anchor ops (`R`, `I`, `D`, `+`, `-`, `MV`) for all text files
-- [x] Token savings tracker + stats dashboard (`tiny-edit stats`)
+- [x] Token savings tracker + stats dashboard (`patchframe stats`)
 - [x] Symbol ops — `M $functionName@sha6` via tree-sitter (JS/TS/Python)
 - [x] VS Code extension — auto-inject file index into Copilot/Cursor system prompt
 - [ ] Streaming apply — apply partial frames as LLM streams (cut perceived latency)
-- [x] MCP server — expose tiny-edit as an MCP tool for Claude Code / Cursor
+- [x] MCP server — expose patchframe as an MCP tool for Claude Code / Cursor
 
 ---
 

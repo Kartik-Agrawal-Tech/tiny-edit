@@ -6,7 +6,7 @@ dist/
 .env.local
 coverage/
 .tokenwire/
-.tiny-edit/
+.patchframe/
 lab/.work/
 vscode-extension/out/
 .vscode/

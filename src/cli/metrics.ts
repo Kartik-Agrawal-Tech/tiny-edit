@@ -1,7 +1,7 @@
 import { readFileSync, appendFileSync, existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 
-const METRICS_DIR = ".tiny-edit";
+const METRICS_DIR = ".patchframe";
 const METRICS_FILE = "metrics.jsonl";
 
 export interface MetricEntry {
@@ -138,7 +138,7 @@ export function summarize(entries: MetricEntry[]): MetricsSummary {
 
 export function formatSummary(s: MetricsSummary): string {
   if (s.totalEdits === 0) {
-    return "No edits recorded yet. Run `tiny-edit apply` first.";
+    return "No edits recorded yet. Run `patchframe apply` first.";
   }
   const fmt = (n: number) => n.toLocaleString();
   const pct = (n: number) => `${n.toFixed(1)}%`;
@@ -150,7 +150,7 @@ export function formatSummary(s: MetricsSummary): string {
 
   return [
     "",
-    "  ┌─ tiny-edit metrics ──────────────────────────────────┐",
+    "  ┌─ patchframe metrics ──────────────────────────────────┐",
     `  │  Total edits:        ${fmt(s.totalEdits).padEnd(34)}│`,
     `  │  Files touched:      ${fmt(s.totalFilesTouched).padEnd(34)}│`,
     `  │  Tokens emitted:     ${fmt(s.totalInputTokens).padEnd(34)}│`,
