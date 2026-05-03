@@ -100,6 +100,17 @@ describe("findSymbol (TS)", () => {
     const loc = findSymbol(TS_SRC, "ts", "Formatter.format");
     expect(loc).not.toBeNull();
   });
+
+  it("finds exported arrow component in TSX (export const)", () => {
+    const TSX_SRC = `
+export const Button = ({ label }: { label: string }) => {
+  return <button>{label}</button>;
+};
+`.trimStart();
+    const loc = findSymbol(TSX_SRC, "ts", "Button");
+    expect(loc).not.toBeNull();
+    expect(loc!.startLine).toBe(1);
+  });
 });
 
 // ─── Python symbols ──────────────────────────────────────────────────────────
@@ -133,5 +144,27 @@ describe("findSymbol (Python)", () => {
 
   it("returns null for unknown symbol", () => {
     expect(findSymbol(PY_SRC, "py", "unknown")).toBeNull();
+  });
+
+  it("finds async def", () => {
+    const SRC = `
+async def fetch_user(uid: int) -> dict:
+    return {"id": uid}
+`.trimStart();
+    const loc = findSymbol(SRC, "py", "fetch_user");
+    expect(loc).not.toBeNull();
+    expect(loc!.startLine).toBe(1);
+  });
+
+  it("finds decorated function", () => {
+    const SRC = `
+from functools import lru_cache
+
+@lru_cache
+def cached_value(k: str) -> int:
+    return hash(k)
+`.trimStart();
+    const loc = findSymbol(SRC, "py", "cached_value");
+    expect(loc).not.toBeNull();
   });
 });

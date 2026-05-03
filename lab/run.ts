@@ -20,7 +20,7 @@ const LAB = fileURLToPath(new URL('.', import.meta.url));
 const SAMPLES = join(LAB, 'samples');
 const WORK = join(LAB, '.work');
 
-const SAMPLE_FILES = ['calc.ts', 'utils.js', 'formatter.py'] as const;
+const SAMPLE_FILES = ['calc.ts', 'utils.js', 'formatter.py', 'Button.tsx', 'async_service.py'] as const;
 
 function sha6(line: string): string {
   return createHash('sha256').update(line.trimEnd()).digest('hex').slice(0, 6);
@@ -172,7 +172,72 @@ results.push(await run('MV: rename file', 'MV', (dir, idx) => {
   };
 }));
 
-// ── Dashboard ─────────────────────────────────────────────────────────────────
+// 8. M — replace React arrow component (Button) in .tsx
+results.push(await run('M: replace TSX arrow component', 'M', (dir, idx) => {
+  const src = readFileSync(join(dir, 'Button.tsx'), 'utf8');
+  const loc = findSymbol(src, 'ts', 'Button')!;
+  const fid = idx.byPath.get('Button.tsx')!;
+  const payload = `export const Button = ({ label, onPress }: ButtonProps) => {\n  const [count, setCount] = useState(0);\n  return <button onClick={() => { setCount(count + 1); onPress(); }}>{label} [{count}]</button>;\n};`;
+  return {
+    frame: `TW1\nM ${fid} $Button@${loc.sigSha6}\n\`\`\`\n${payload}\n\`\`\``,
+    baseline: src,
+    verify: d => readFileSync(join(d, 'Button.tsx'), 'utf8').includes('[{count}]'),
+  };
+}));
+
+// 9. M — replace class component method (Toggle.render) in .tsx
+results.push(await run('M: replace TSX class method', 'M', (dir, idx) => {
+  const src = readFileSync(join(dir, 'Button.tsx'), 'utf8');
+  const loc = findSymbol(src, 'ts', 'Toggle.render')!;
+  const fid = idx.byPath.get('Button.tsx')!;
+  const payload = `  render() {\n    return <span className={this.state.on ? 'on' : 'off'}>{this.state.on ? 'YES' : 'NO'}</span>;\n  }`;
+  return {
+    frame: `TW1\nM ${fid} $Toggle.render@${loc.sigSha6}\n\`\`\`\n${payload}\n\`\`\``,
+    baseline: src,
+    verify: d => readFileSync(join(d, 'Button.tsx'), 'utf8').includes("'YES' : 'NO'"),
+  };
+}));
+
+// 10. M — replace Python async def
+results.push(await run('M: replace Python async def', 'M', (dir, idx) => {
+  const src = readFileSync(join(dir, 'async_service.py'), 'utf8');
+  const loc = findSymbol(src, 'py', 'fetch_user')!;
+  const fid = idx.byPath.get('async_service.py')!;
+  const payload = `async def fetch_user(user_id: int) -> dict:\n    await asyncio.sleep(0.01)\n    return {"id": user_id, "name": f"user_{user_id}", "v": 2}`;
+  return {
+    frame: `TW1\nM ${fid} $fetch_user@${loc.sigSha6}\n\`\`\`\n${payload}\n\`\`\``,
+    baseline: src,
+    verify: d => readFileSync(join(d, 'async_service.py'), 'utf8').includes('"v": 2'),
+  };
+}));
+
+// 11. M — replace Python decorated function
+results.push(await run('M: replace Python decorated fn', 'M', (dir, idx) => {
+  const src = readFileSync(join(dir, 'async_service.py'), 'utf8');
+  const loc = findSymbol(src, 'py', 'cached_value')!;
+  const fid = idx.byPath.get('async_service.py')!;
+  const payload = `@lru_cache(maxsize=128)\ndef cached_value(key: str) -> int:\n    return (hash(key) ^ 0xDEAD) & 0xFFFF`;
+  return {
+    frame: `TW1\nM ${fid} $cached_value@${loc.sigSha6}\n\`\`\`\n${payload}\n\`\`\``,
+    baseline: src,
+    verify: d => readFileSync(join(d, 'async_service.py'), 'utf8').includes('0xDEAD'),
+  };
+}));
+
+// 12. M — replace Python class method (Cache.get)
+results.push(await run('M: replace Python class method', 'M', (dir, idx) => {
+  const src = readFileSync(join(dir, 'async_service.py'), 'utf8');
+  const loc = findSymbol(src, 'py', 'Cache.get')!;
+  const fid = idx.byPath.get('async_service.py')!;
+  const payload = `    def get(self, key: str) -> int:\n        return self.store.get(key, -1)`;
+  return {
+    frame: `TW1\nM ${fid} $Cache.get@${loc.sigSha6}\n\`\`\`\n${payload}\n\`\`\``,
+    baseline: src,
+    verify: d => readFileSync(join(d, 'async_service.py'), 'utf8').includes('return self.store.get(key, -1)'),
+  };
+}));
+
+// ── Dashboard ──────────────────────────────────────────────────────────────────
 
 const W = 72;
 const LINE = '═'.repeat(W);

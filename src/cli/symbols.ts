@@ -69,6 +69,13 @@ function searchTopLevel(root: TSNode, name: string): TSNode | null {
     if (child.type === 'export_statement') {
       for (const inner of child.namedChildren) {
         if (declarationName(inner) === name) return inner;
+        if (inner.type === 'lexical_declaration' || inner.type === 'variable_declaration') {
+          for (const decl of inner.namedChildren) {
+            if (decl.type === 'variable_declarator' && decl.childForFieldName('name')?.text === name) {
+              return child;
+            }
+          }
+        }
       }
     }
 
@@ -129,7 +136,15 @@ export function listSymbols(source: string, lang: SupportedLang): string[] {
     if (child.type === 'export_statement') {
       for (const inner of child.namedChildren) {
         const innerN = declarationName(inner);
-        if (innerN) names.push(innerN);
+        if (innerN) { names.push(innerN); continue; }
+        if (inner.type === 'lexical_declaration' || inner.type === 'variable_declaration') {
+          for (const decl of inner.namedChildren) {
+            if (decl.type === 'variable_declarator') {
+              const vn = decl.childForFieldName('name')?.text;
+              if (vn) names.push(vn);
+            }
+          }
+        }
       }
       continue;
     }
